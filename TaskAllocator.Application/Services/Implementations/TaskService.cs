@@ -3,16 +3,36 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Metadata;
 using TaskAllocator.Application.DTOs;
+using TaskAllocator.Application.Interfaces.Repositories;
 using TaskAllocator.Application.Services.Interfaces;
+using AutoMapper;
 
 namespace TaskAllocator.Application.Services.Implementations
 {
     public class TaskService : ITaskService
     {
-        public Task<TaskDto> AssignTaskAsync(Guid taskId, Guid userId)
+        private readonly ITaskRepository _taskRepository;
+        private readonly IMapper _mapper;
+
+        public TaskService(ITaskRepository taskRepository, IMapper mapper)
         {
-            throw new NotImplementedException();
+            _taskRepository = taskRepository;
+            _mapper = mapper;
+        }
+        public async Task<TaskDto> AssignTaskAsync(Guid taskId, Guid userId)
+        {
+            var task = await _taskRepository.GetByIdAsync(taskId);
+            var user = await _userRepository.GetByIdAsync(userId);
+
+            if (task == null || user == null)
+                throw new KeyNotFoundException("Task or User not found");
+
+            task.AssignedTo = user.Id;
+            await _taskRepository.UpdateAsync(task);
+
+            return _mapper.Map<TaskDto>(task);
         }
 
         public Task<TaskDto> AutoAssignTaskAsync(Guid taskId)
@@ -30,7 +50,7 @@ namespace TaskAllocator.Application.Services.Implementations
             throw new NotImplementedException();
         }
 
-        public Task<List<TaskDto>> GetAllTasksAsync()
+        public Task<IEnumerable<TaskDto>> GetAllTasksAsync()
         {
             throw new NotImplementedException();
         }

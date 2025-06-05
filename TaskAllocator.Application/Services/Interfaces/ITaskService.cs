@@ -9,7 +9,7 @@ namespace TaskAllocator.Application.Services.Interfaces
 {
     public interface ITaskService
     {
-        Task<List<TaskDto>> GetAllTasksAsync();
+        Task<IEnumerable<TaskDto>> GetAllTasksAsync();
         Task<TaskDto> GetTaskByIdAsync(Guid id);
         Task<TaskDto> CreateTaskAsync(CreateTaskRequest request);
         Task<TaskDto> UpdateTaskAsync(Guid id, UpdateTaskRequest request);

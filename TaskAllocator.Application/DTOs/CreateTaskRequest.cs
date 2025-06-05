@@ -12,4 +12,4 @@ namespace TaskAllocator.Application.DTOs
         public string Description { get; set; }
     }
 }
-}
+
