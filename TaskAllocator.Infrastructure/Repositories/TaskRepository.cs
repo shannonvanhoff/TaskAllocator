@@ -21,12 +21,35 @@ namespace TaskAllocator.Infrastructure.Repositories
 
         public async Task<IEnumerable<TaskEntity>> GetAllAsync()
         {
-            return await _context.Tasks.Include(t => t.AssignedUser).ToListAsync();
+            try
+            {
+                return await _context.Tasks.Include(t => t.AssignedUser).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (replace with a real logger in production)
+                Console.WriteLine($"Error in GetAllAsync: {ex.Message}");
+                // Optionally, rethrow or return an empty list
+                throw;
+                // Or: return Enumerable.Empty<TaskEntity>();
+            }
         }
 
         public async Task<TaskEntity?> GetByIdAsync(Guid id)
         {
-            return await _context.Tasks.Include(t => t.AssignedUser).FirstOrDefaultAsync(t => t.Id == id);
+            try
+            {
+                return await _context.Tasks
+                    .Include(t => t.AssignedUser)
+                    .FirstOrDefaultAsync(t => t.Id == id);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (replace with a real logger in production)
+                Console.WriteLine($"Error in GetByIdAsync: {ex.Message}");
+                // Return null to indicate not found or error
+                return null;
+            }
         }
 
         public async Task AddAsync(TaskEntity task)
@@ -34,14 +57,16 @@ namespace TaskAllocator.Infrastructure.Repositories
             await _context.Tasks.AddAsync(task);
         }
 
-        public void Update(TaskEntity task)
+        public async Task UpdateAsync(TaskEntity task)
         {
             _context.Tasks.Update(task);
+            await _context.SaveChangesAsync();
         }
 
-        public void Delete(TaskEntity task)
+        public async Task DeleteAsync(TaskEntity task)
         {
             _context.Tasks.Remove(task);
+            await _context.SaveChangesAsync();
         }
 
         public async Task SaveAsync()

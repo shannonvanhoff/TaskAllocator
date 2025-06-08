@@ -43,7 +43,7 @@ namespace TaskAllocator.Infrastructure.Data
             );
 
             // ✅ Seed Tasks
-            modelBuilder.Entity<Task>().HasData(
+            modelBuilder.Entity<TaskEntity>().HasData(
                 new TaskEntity
                 {
                     Id = task1Id,

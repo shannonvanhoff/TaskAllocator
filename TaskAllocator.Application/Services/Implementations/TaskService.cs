@@ -8,6 +8,7 @@ using TaskAllocator.Application.DTOs;
 using TaskAllocator.Application.Interfaces.Repositories;
 using TaskAllocator.Application.Services.Interfaces;
 using AutoMapper;
+using TaskAllocator.Domain.Entities;
 
 namespace TaskAllocator.Application.Services.Implementations
 {
@@ -15,6 +16,7 @@ namespace TaskAllocator.Application.Services.Implementations
     {
         private readonly ITaskRepository _taskRepository;
         private readonly IMapper _mapper;
+        private readonly IUserRepository _userRepository;
 
         public TaskService(ITaskRepository taskRepository, IMapper mapper)
         {
@@ -35,34 +37,79 @@ namespace TaskAllocator.Application.Services.Implementations
             return _mapper.Map<TaskDto>(task);
         }
 
-        public Task<TaskDto> AutoAssignTaskAsync(Guid taskId)
+        public async Task<TaskDto> AutoAssignTaskAsync(Guid taskId)
         {
-            throw new NotImplementedException();
+            var task = await _taskRepository.GetByIdAsync(taskId);
+            var users = await _userRepository.GetAllAsync();
+
+            if (task == null || !users.Any())
+                throw new Exception("Task or Users not found");
+
+            // Simple auto-assign: random
+            var randomUser = users.OrderBy(u => Guid.NewGuid()).First();
+            task.AssignedTo = randomUser.Id;
+
+            await _taskRepository.UpdateAsync(task);
+
+            return _mapper.Map<TaskDto>(task);
         }
 
-        public Task<TaskDto> CreateTaskAsync(CreateTaskRequest request)
+        public async Task<TaskDto> CreateTaskAsync(CreateTaskRequest request)
         {
-            throw new NotImplementedException();
+            var task = _mapper.Map<TaskEntity>(request);
+            task.Id = Guid.NewGuid();
+            task.CreatedAt = DateTime.UtcNow;
+
+            await _taskRepository.AddAsync(task);
+            return _mapper.Map<TaskDto>(task);
         }
 
-        public Task<bool> DeleteTaskAsync(Guid id)
+        public async Task<bool> DeleteTaskAsync(Guid id)
         {
-            throw new NotImplementedException();
+            var task = await _taskRepository.GetByIdAsync(id);
+            if (task == null)
+                return false;
+
+            await _taskRepository.DeleteAsync(task);
+            return true;
         }
 
-        public Task<IEnumerable<TaskDto>> GetAllTasksAsync()
+        public async Task<IEnumerable<TaskDto>> GetAllTasksAsync()
         {
-            throw new NotImplementedException();
+            try
+            {
+                var tasks = await _taskRepository.GetAllAsync();
+                return _mapper.Map<IEnumerable<TaskDto>>(tasks);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (replace with a real logger in production)
+                Console.WriteLine($"Error in GetAllTasksAsync: {ex.Message}");
+                // Optionally, rethrow or return an empty list
+                throw;
+                // Or: return Enumerable.Empty<TaskDto>();
+            }
         }
 
-        public Task<TaskDto> GetTaskByIdAsync(Guid id)
+        public async Task<TaskDto> GetTaskByIdAsync(Guid id)
         {
-            throw new NotImplementedException();
+            var task = await _taskRepository.GetByIdAsync(id);
+            if (task == null)
+                throw new KeyNotFoundException("Task not found");
+
+            return _mapper.Map<TaskDto>(task);
         }
 
-        public Task<TaskDto> UpdateTaskAsync(Guid id, UpdateTaskRequest request)
+        public async Task<TaskDto> UpdateTaskAsync(Guid id, UpdateTaskRequest request)
         {
-            throw new NotImplementedException();
+            var task = await _taskRepository.GetByIdAsync(id);
+            if (task == null)
+                throw new KeyNotFoundException("Task not found");
+
+            _mapper.Map(request, task);
+            await _taskRepository.UpdateAsync(task);
+
+            return _mapper.Map<TaskDto>(task);
         }
     }
 }

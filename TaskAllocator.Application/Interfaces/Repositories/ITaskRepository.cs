@@ -14,8 +14,8 @@ namespace TaskAllocator.Application.Interfaces.Repositories
         Task<IEnumerable<TaskEntity>> GetAllAsync();
         Task<TaskEntity?> GetByIdAsync(Guid id);
         Task AddAsync(TaskEntity task);
-        void Update(TaskEntity task);
-        void Delete(TaskEntity task);
+        Task UpdateAsync(TaskEntity task);
+        Task DeleteAsync(TaskEntity task);
         Task SaveAsync();
     }
 }
